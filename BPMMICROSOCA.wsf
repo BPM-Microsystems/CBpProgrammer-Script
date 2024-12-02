@@ -1,0 +1,58 @@
+<job>
+  <script language="JScript">
+    var BpProgrammer = WScript.CreateObject("BPWin.CBpProgrammer", "BpProgrammer_");
+
+    var BPMICRO_SOCA = 0;
+    var CLIENT_SOCA = 1;
+    var SOCKET_READY_TO_BE_PLACED = 7;
+    var SOCKET_READY_TO_BE_PICKED = 6;
+
+    var lSocketToPlaceDeviceAt = -1;
+    var lSocketToPickDeviceFrom = -1;
+
+    WScript.Echo("Setting SOCA");
+    BpProgrammer.SetSocaMode(BPMICRO_SOCA);    
+
+    // Begin a job
+    WScript.Echo("Starting job");
+    BpProgrammer.BeginJob(10, "C:\\Users\\poonams\\Desktop\\.bp file\\DeviceISSI_beginJob.bp");  
+
+    
+    while (true) {
+      WScript.Sleep(100);
+
+      //device placement
+      if (lSocketToPlaceDeviceAt != -1) {
+        //WScript.Echo("Placing device in socket " + lSocketToPlaceDeviceAt);
+        BpProgrammer.DevicePlaced(lSocketToPlaceDeviceAt);
+        lSocketToPlaceDeviceAt = -1;
+      }
+
+      //device picking
+      if (lSocketToPickDeviceFrom != -1) {
+        //WScript.Echo("Picking device from socket " + lSocketToPickDeviceFrom);
+        BpProgrammer.DevicePicked(lSocketToPickDeviceFrom);
+        lSocketToPickDeviceFrom = -1;
+      }
+    }
+
+    //socket status changes
+    function BpProgrammer_NotifySocketStatusChanged(lSocketNumber, lStatusCode, lFailCode, lTotalNumberDevicesPassed, lTotalNumberDevicesFailed, lTotalNumberDevicesActive, lTotalNumberDevicesReady) {
+      if (lStatusCode == SOCKET_READY_TO_BE_PLACED) {
+        WScript.Echo("Socket " + lSocketNumber + " is ready for placement");
+        lSocketToPlaceDeviceAt = lSocketNumber;
+      }
+
+      if (lStatusCode == SOCKET_READY_TO_BE_PICKED) {
+        WScript.Echo("Socket " + lSocketNumber + " is ready to be picked");
+        lSocketToPickDeviceFrom = lSocketNumber;
+      }
+    }
+
+    // Event handler for job completion
+    function BpProgrammer_NotifyJobComplete(lResult) {
+      WScript.Echo("Job complete with result: " + lResult);
+      WScript.Quit();  // End script when job is complete
+    }
+  </script>
+</job>
